@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Future of Hospitals — Past, Present & Possible Futures</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+  :root {
+    --bg-primary: #080a0f; --bg-secondary: #0f1118; --bg-card: #141620; --bg-accent: #1a1c28;
+    --text-primary: #e8e8ed; --text-secondary: #9898a8; --text-muted: #5a5a6e;
+    --accent: #6a9fba; --accent-light: #8dbdd6; --accent-dim: rgba(106,159,186,0.12);
+    --border: rgba(255,255,255,0.06);
+    --past: #7a9e8a; --present: #ba8a6a; --future: #7e8ec8;
+    --transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--accent-dim) transparent; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.7; overflow-x: hidden; }
+
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 0 3rem; height: 64px; display: flex; align-items: center; justify-content: space-between; background: rgba(8,10,15,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); transition: transform 0.3s; }
+  nav.hidden { transform: translateY(-100%); }
+  .nav-brand { font-family: 'Playfair Display', serif; font-size: 0.95rem; letter-spacing: 0.05em; color: var(--accent); }
+  .nav-links { display: flex; gap: 0.25rem; }
+  .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.8rem; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.5rem 1rem; border-radius: 4px; transition: all 0.25s; }
+  .nav-links a:hover { color: var(--text-primary); background: var(--accent-dim); }
+  .nav-links a.active { color: var(--accent); background: var(--accent-dim); }
+  .progress-bar { position: fixed; top: 64px; left: 0; height: 2px; background: var(--accent); z-index: 99; transition: width 0.1s linear; }
+
+  .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 2rem; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 80% 50% at 50% 50%, rgba(106,159,186,0.06) 0%, transparent 70%), radial-gradient(ellipse 60% 40% at 70% 60%, rgba(126,142,200,0.04) 0%, transparent 60%); }
+  .hero-overline { font-size: 0.75rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--accent); margin-bottom: 2rem; opacity: 0; animation: fadeUp 1s 0.3s forwards; }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(2.5rem, 6vw, 5rem); font-weight: 400; line-height: 1.15; max-width: 800px; opacity: 0; animation: fadeUp 1s 0.5s forwards; }
+  .hero h1 em { font-style: italic; color: var(--accent); }
+  .hero-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-top: 1.5rem; max-width: 550px; font-weight: 300; opacity: 0; animation: fadeUp 1s 0.7s forwards; }
+  .hero-cta { margin-top: 3rem; display: flex; gap: 1rem; opacity: 0; animation: fadeUp 1s 0.9s forwards; }
+  .hero-cta a { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.85rem 2rem; border-radius: 4px; text-decoration: none; font-size: 0.85rem; font-weight: 500; letter-spacing: 0.04em; transition: all 0.3s; }
+  .cta-primary { background: var(--accent); color: var(--bg-primary); }
+  .cta-primary:hover { background: var(--accent-light); transform: translateY(-2px); }
+  .cta-secondary { border: 1px solid var(--border); color: var(--text-secondary); }
+  .cta-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .scroll-indicator { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 0.5rem; opacity: 0; animation: fadeUp 1s 1.2s forwards; }
+  .scroll-indicator span { font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); }
+  .scroll-line { width: 1px; height: 40px; background: linear-gradient(to bottom, var(--accent), transparent); animation: pulse 2s infinite; }
+
+  .timeline-nav { position: fixed; left: 2rem; top: 50%; transform: translateY(-50%); z-index: 90; display: flex; flex-direction: column; gap: 0.15rem; opacity: 0; transition: opacity 0.5s; }
+  .timeline-nav.visible { opacity: 1; }
+  .timeline-dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--text-muted); background: transparent; cursor: pointer; transition: all 0.3s; position: relative; }
+  .timeline-dot:hover { border-color: var(--accent); transform: scale(1.3); }
+  .timeline-dot.active { border-color: var(--accent); background: var(--accent); transform: scale(1.3); }
+  .timeline-dot[data-era="past"] { border-color: var(--past); } .timeline-dot[data-era="past"].active { background: var(--past); }
+  .timeline-dot[data-era="present"] { border-color: var(--present); } .timeline-dot[data-era="present"].active { background: var(--present); }
+  .timeline-dot[data-era="future"] { border-color: var(--future); } .timeline-dot[data-era="future"].active { background: var(--future); }
+  .timeline-dot .tooltip { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); white-space: nowrap; font-size: 0.7rem; color: var(--text-secondary); opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+  .timeline-dot:hover .tooltip { opacity: 1; }
+
+  section { padding: 6rem 3rem; position: relative; }
+  .section-inner { max-width: 1200px; margin: 0 auto; }
+  .era-header { min-height: 60vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 4rem 2rem; }
+  .era-label { font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase; margin-bottom: 1.5rem; padding: 0.4rem 1.2rem; border-radius: 2px; display: inline-block; }
+  .era-label.past { color: var(--past); border: 1px solid rgba(122,158,138,0.3); background: rgba(122,158,138,0.08); }
+  .era-label.present { color: var(--present); border: 1px solid rgba(186,138,106,0.3); background: rgba(186,138,106,0.08); }
+  .era-label.future { color: var(--future); border: 1px solid rgba(126,142,200,0.3); background: rgba(126,142,200,0.08); }
+  .era-header h2 { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 400; line-height: 1.2; max-width: 700px; }
+  .era-header p { color: var(--text-secondary); font-size: 1.05rem; max-width: 600px; margin-top: 1.5rem; font-weight: 300; }
+
+  .content-block { padding: 5rem 0; border-top: 1px solid var(--border); }
+  .content-block h3 { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 400; margin-bottom: 0.5rem; }
+  .content-block .subtitle { font-size: 1rem; color: var(--accent); font-weight: 300; margin-bottom: 2rem; font-style: italic; }
+  .content-block p { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8; max-width: 700px; }
+  .content-block p + p { margin-top: 1.2rem; }
+
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; transition: all var(--transition); }
+  .card:hover { border-color: rgba(106,159,186,0.2); transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+  .card-image { width: 100%; height: 200px; object-fit: cover; display: block; }
+  .card-body { padding: 1.5rem; }
+  .card-body h4 { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 400; margin-bottom: 0.75rem; }
+  .card-body p { color: var(--text-secondary); font-size: 0.85rem; line-height: 1.7; }
+  .card-tag { display: inline-block; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.25rem 0.6rem; border-radius: 2px; margin-bottom: 0.75rem; }
+  .card-tag.past { color: var(--past); background: rgba(122,158,138,0.12); }
+  .card-tag.present { color: var(--present); background: rgba(186,138,106,0.12); }
+  .card-tag.future { color: var(--future); background: rgba(126,142,200,0.12); }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+  .two-col.reverse { direction: rtl; } .two-col.reverse > * { direction: ltr; }
+  .col-image { width: 100%; border-radius: 8px; object-fit: cover; max-height: 450px; }
+
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin: 3rem 0; }
+  .stat { text-align: center; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; transition: all var(--transition); }
+  .stat:hover { border-color: rgba(186,138,106,0.3); transform: translateY(-2px); }
+  .stat-number { font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 700; color: var(--present); line-height: 1; }
+  .stat-label { font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem; line-height: 1.5; }
+
+  .numbered-list { display: flex; flex-direction: column; gap: 2rem; margin-top: 2rem; }
+  .numbered-item { display: grid; grid-template-columns: 60px 1fr; gap: 1.5rem; align-items: start; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; transition: all var(--transition); }
+  .numbered-item:hover { border-color: rgba(126,142,200,0.25); transform: translateX(4px); }
+  .numbered-item .num { font-family: 'Playfair Display', serif; font-size: 2rem; opacity: 0.6; }
+  .numbered-item h4 { font-size: 1.05rem; font-weight: 600; margin-bottom: 0.5rem; }
+  .numbered-item p { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.7; }
+
+  .pullquote { position: relative; padding: 3rem 3rem 3rem 4rem; margin: 3rem 0; border-left: 2px solid var(--accent); background: var(--accent-dim); border-radius: 0 8px 8px 0; }
+  .pullquote p { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-style: italic; color: var(--text-primary); line-height: 1.6; }
+
+  .tabs { display: flex; gap: 0.25rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .tab-btn { background: none; border: none; color: var(--text-muted); font-size: 0.82rem; font-weight: 500; padding: 0.75rem 1.25rem; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.25s; font-family: inherit; }
+  .tab-btn:hover { color: var(--text-secondary); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-panel { display: none; } .tab-panel.active { display: block; }
+
+  .futures-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+  .future-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 2rem; position: relative; overflow: hidden; transition: all var(--transition); cursor: pointer; }
+  .future-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--future); opacity: 0; transition: opacity 0.3s; }
+  .future-card:hover::before { opacity: 1; }
+  .future-card:hover { border-color: rgba(126,142,200,0.25); transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+  .future-card .icon { font-size: 2rem; margin-bottom: 1rem; }
+  .future-card h4 { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 400; margin-bottom: 0.75rem; }
+  .future-card p { color: var(--text-secondary); font-size: 0.85rem; line-height: 1.7; }
+  .future-card .expand-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease; }
+  .future-card.expanded .expand-content { max-height: 500px; }
+  .future-card .expand-hint { font-size: 0.72rem; color: var(--text-muted); margin-top: 1rem; letter-spacing: 0.05em; }
+
+  .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 2rem 0; }
+  .gallery img { width: 100%; height: 220px; object-fit: cover; border-radius: 6px; transition: all var(--transition); cursor: pointer; }
+  .gallery img:hover { transform: scale(1.03); box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
+
+  .lightbox { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.92); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; cursor: pointer; }
+  .lightbox.open { opacity: 1; pointer-events: all; }
+  .lightbox img { max-width: 85vw; max-height: 85vh; object-fit: contain; border-radius: 4px; }
+
+  .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin: 2rem 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .comparison-side { padding: 2.5rem; }
+  .comparison-side:first-child { border-right: 1px solid var(--border); }
+  .comparison-side h4 { font-family: 'Playfair Display', serif; font-size: 1.1rem; margin-bottom: 1.5rem; }
+  .comparison-side ul { list-style: none; display: flex; flex-direction: column; gap: 0.75rem; }
+  .comparison-side ul li { font-size: 0.85rem; color: var(--text-secondary); padding-left: 1.2rem; position: relative; }
+  .comparison-side ul li::before { content: ''; position: absolute; left: 0; top: 0.55em; width: 6px; height: 6px; border-radius: 50%; }
+  .comparison-side.old ul li::before { background: var(--present); }
+  .comparison-side.new ul li::before { background: var(--future); }
+
+  .era-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); }
+  footer { padding: 4rem 3rem; border-top: 1px solid var(--border); text-align: center; }
+  footer p { font-size: 0.78rem; color: var(--text-muted); line-height: 1.8; }
+  footer .brand { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--accent); margin-bottom: 0.5rem; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+  .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 900px) {
+    nav { padding: 0 1.5rem; } section { padding: 4rem 1.5rem; }
+    .two-col, .comparison { grid-template-columns: 1fr; gap: 2rem; }
+    .two-col.reverse { direction: ltr; }
+    .gallery { grid-template-columns: 1fr 1fr; }
+    .timeline-nav { display: none; }
+    .nav-links a { padding: 0.4rem 0.6rem; font-size: 0.7rem; }
+    .cards-grid, .futures-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) { .hero h1 { font-size: 2rem; } .stats-row { grid-template-columns: 1fr; } .gallery { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-brand">The Future of Hospitals</div>
+  <div class="nav-links">
+    <a href="#past">Past</a>
+    <a href="#present">Present</a>
+    <a href="#future">Future</a>
+  </div>
+</nav>
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="timeline-nav" id="timelineNav">
+  <div class="timeline-dot" data-era="past" data-section="past"><span class="tooltip">History</span></div>
+  <div class="timeline-dot" data-era="past" data-section="ancient"><span class="tooltip">Ancient Healing</span></div>
+  <div class="timeline-dot" data-era="past" data-section="modern-birth"><span class="tooltip">Modern Hospital</span></div>
+  <div class="timeline-dot" data-era="past" data-section="antiseptic"><span class="tooltip">Germ Theory</span></div>
+  <div class="timeline-dot" data-era="past" data-section="twentieth"><span class="tooltip">20th Century</span></div>
+  <div class="timeline-dot" data-era="present" data-section="present"><span class="tooltip">Today</span></div>
+  <div class="timeline-dot" data-era="present" data-section="crises"><span class="tooltip">Five Crises</span></div>
+  <div class="timeline-dot" data-era="present" data-section="design-gap"><span class="tooltip">Design Gap</span></div>
+  <div class="timeline-dot" data-era="future" data-section="future"><span class="tooltip">Future</span></div>
+  <div class="timeline-dot" data-era="future" data-section="futures-explore"><span class="tooltip">7 Futures</span></div>
+  <div class="timeline-dot" data-era="future" data-section="new-brief"><span class="tooltip">New Brief</span></div>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()"><img id="lightboxImg" src="" alt=""></div>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero" id="hero">
+  <div class="hero-overline">An Interactive Exploration</div>
+  <h1>The <em>Future</em> of Hospitals</h1>
+  <p class="hero-subtitle">From ancient temples of healing to AI-powered care environments — how the spaces where we heal have evolved, and where they must go next.</p>
+  <div class="hero-cta">
+    <a href="#past" class="cta-primary">Begin the Journey &#8594;</a>
+    <a href="#future" class="cta-secondary">Jump to the Future</a>
+  </div>
+  <div class="scroll-indicator"><span>Scroll to explore</span><div class="scroll-line"></div></div>
+</section>
+
+<!-- ═══ PAST ═══ -->
+<div class="era-divider"></div>
+<section class="era-header" id="past">
+  <div class="reveal">
+    <span class="era-label past">Part I</span>
+    <h2>A History of Healing Spaces</h2>
+    <p>The hospital is one of humanity's most consequential inventions. Its architecture has always embodied our understanding of disease, care, and what it means to be human.</p>
+  </div>
+</section>
+
+<section id="ancient">
+  <div class="section-inner">
+    <div class="content-block reveal">
+      <h3>Temples, Monasteries & the Sacred Origins of Care</h3>
+      <div class="subtitle">When healing was inseparable from the divine</div>
+      <p>The earliest hospitals were not hospitals at all — they were temples. The Greek Asclepieia, dedicated to the god of healing Asclepius, were sanctuaries where the sick slept in sacred dormitories and received treatment through a combination of prayer, herbal remedies, bathing, and dream interpretation. The most famous, at Epidaurus (4th century BC), included a theatre, gymnasium, and baths — an environment designed around the premise that healing required the restoration of the whole person, not just the treatment of disease.</p>
+    </div>
+
+    <div class="cards-grid reveal">
+      <div class="card">
+        <img src="images/ancient-1.jpg" alt="Ancient healing" class="card-image" onclick="openLightbox(this.src)">
+        <div class="card-body">
+          <span class="card-tag past">4th Century BC</span>
+          <h4>The Greek Asclepieion</h4>
+          <p>Healing sanctuaries combining temple, theatre, baths, and dormitories. The Asclepieion at Epidaurus understood that environment was therapy — that architecture could be medicine. Patients slept in the abaton and received treatment through <em>incubation</em>: healing dreams.</p>
+        </div>
+      </div>
+      <div class="card">
+        <img src="images/ancient-2.jpg" alt="Islamic hospital" class="card-image" onclick="openLightbox(this.src)">
+        <div class="card-body">
+          <span class="card-tag past">8th Century AD</span>
+          <h4>The Islamic Bimaristan</h4>
+          <p>The bimaristan was the world's first true hospital: a secular institution providing free care to all, regardless of faith or wealth. The Ahmad ibn Tulun Hospital in Cairo (872 AD) had separate wards for different conditions, a pharmacy, and — remarkably — a ward for mental illness, treated with music and water therapy.</p>
+        </div>
+      </div>
+      <div class="card">
+        <img src="images/historic-1.jpg" alt="Medieval hospital" class="card-image" onclick="openLightbox(this.src)">
+        <div class="card-body">
+          <span class="card-tag past">Medieval</span>
+          <h4>The Monastic Infirmary</h4>
+          <p>In medieval Europe, monasteries were the primary providers of medical care. The H&ocirc;tel-Dieu in Paris (founded 651 AD) is the oldest hospital still operating. These institutions were charitable — care was an act of faith, not commerce. The ward plan, with beds arranged along a long hall, persisted for centuries.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-block reveal" id="modern-birth">
+      <h3>The Birth of the Modern Hospital</h3>
+      <div class="subtitle">From charitable refuge to scientific institution</div>
+    </div>
+
+    <div class="two-col reveal">
+      <div>
+        <p>The modern hospital emerged in the 18th century as Enlightenment thinking reframed disease as a problem of science rather than sin. The voluntary hospital movement in Britain — Guy's Hospital (1721), the London Hospital (1740) — created institutions funded by subscription and philanthropy, staffed by physicians who used them as teaching environments.</p>
+        <p style="margin-top:1.2rem">Florence Nightingale's experience in the Crimean War (1854) transformed hospital design. Her "pavilion ward" plan — long, narrow wards with high ceilings, large windows on both sides, and cross-ventilation — was a direct response to the filthy, overcrowded conditions she witnessed at Scutari. The Nightingale ward became the global standard for hospital architecture for the next century.</p>
+      </div>
+      <img src="images/historic-2.jpg" alt="Historic hospital" class="col-image" onclick="openLightbox(this.src)">
+    </div>
+
+    <div class="content-block reveal" id="antiseptic">
+      <h3>Germ Theory and the Antiseptic Revolution</h3>
+      <div class="subtitle">When architecture became infection control</div>
+    </div>
+
+    <div class="two-col reverse reveal">
+      <div>
+        <p>Pasteur's germ theory (1860s) and Lister's antiseptic technique (1867) fundamentally changed what a hospital needed to be. The building itself became an instrument of hygiene: smooth, cleanable surfaces replaced porous materials; operating theatres were redesigned for sterility; ventilation systems were engineered to move contaminated air out.</p>
+        <p style="margin-top:1.2rem">By the early 20th century, the hospital had been transformed from a place where the poor went to die into a place where science could save lives. This shift — from charity to technology — would define hospital design for the next hundred years, for better and for worse.</p>
+      </div>
+      <img src="images/surgery-1.jpg" alt="Surgery" class="col-image" onclick="openLightbox(this.src)">
+    </div>
+
+    <div class="content-block reveal" id="twentieth">
+      <h3>The 20th Century Hospital</h3>
+      <div class="subtitle">The machine for healing</div>
+      <p>The 20th century hospital was shaped by three forces: the explosion of medical technology (X-rays, antibiotics, intensive care, organ transplants), the rise of health insurance and public healthcare systems, and the architectural logic of efficiency. The result was the hospital as we know it today: a large, complex, technology-dense building optimised for clinical workflow — and often hostile to the human beings inside it.</p>
+      <p>Le Corbusier's concept of the house as "a machine for living in" found its darkest expression in hospital design. Fluorescent-lit corridors, windowless operating theatres, identical rooms stripped of personality, wayfinding systems that confuse rather than guide — these are not accidents. They are the spatial consequences of designing for the disease rather than the patient.</p>
+    </div>
+
+    <div class="pullquote reveal">
+      <p>We have built hospitals that are miracles of clinical capability and failures of human experience. The next generation must be both.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PRESENT ═══ -->
+<div class="era-divider"></div>
+<section class="era-header" id="present">
+  <div class="reveal">
+    <span class="era-label present">Part II</span>
+    <h2>The State of Hospitals Today</h2>
+    <p>A $4 trillion global healthcare system built around buildings that were designed for the 20th century — now struggling with the demands of the 21st.</p>
+  </div>
+</section>
+
+<section id="present-content">
+  <div class="section-inner">
+    <div class="content-block reveal">
+      <h3>The System at a Glance</h3>
+      <div class="subtitle">Scale, strain, and contradiction</div>
+    </div>
+
+    <div class="stats-row reveal">
+      <div class="stat"><div class="stat-number" data-target="6" data-suffix="K+">0</div><div class="stat-label">hospitals in the<br>United States alone</div></div>
+      <div class="stat"><div class="stat-number" data-target="65" data-suffix="%">0</div><div class="stat-label">of hospital buildings<br>over 25 years old</div></div>
+      <div class="stat"><div class="stat-number" data-target="250" data-prefix="" data-suffix="K">0</div><div class="stat-label">deaths annually from<br>medical errors (US)</div></div>
+      <div class="stat"><div class="stat-number" data-target="62" data-suffix="%">0</div><div class="stat-label">of nurses report<br>burnout symptoms</div></div>
+    </div>
+
+    <div class="content-block reveal" id="crises">
+      <h3>Five Crises Facing Hospitals Today</h3>
+    </div>
+
+    <div class="tabs reveal">
+      <button class="tab-btn active" onclick="switchTab(event, 'tab-workforce')">Workforce</button>
+      <button class="tab-btn" onclick="switchTab(event, 'tab-burnout')">Burnout</button>
+      <button class="tab-btn" onclick="switchTab(event, 'tab-infection')">Infections</button>
+      <button class="tab-btn" onclick="switchTab(event, 'tab-equity')">Equity</button>
+      <button class="tab-btn" onclick="switchTab(event, 'tab-cost')">Cost</button>
+    </div>
+
+    <div id="tab-workforce" class="tab-panel active reveal">
+      <div class="two-col">
+        <div>
+          <h4 style="font-family:'Playfair Display',serif;font-size:1.2rem;margin-bottom:1rem;color:var(--accent)">The Workforce Crisis</h4>
+          <p>The WHO projects a global shortage of 10 million healthcare workers by 2030. In the US, the nursing shortage alone is projected at 200,000-450,000 by 2025. The pandemic accelerated an exodus: 18% of healthcare workers quit their jobs between 2020-2022, and one in five of those who remained said they planned to leave within two years.</p>
+          <p style="margin-top:1rem">This is not a recruitment problem. It is an environment problem. Healthcare workers are leaving because the physical and emotional conditions of their work have become unsustainable.</p>
+        </div>
+        <img src="images/staff-1.jpg" alt="Healthcare worker" class="col-image" onclick="openLightbox(this.src)">
+      </div>
+    </div>
+    <div id="tab-burnout" class="tab-panel reveal">
+      <div class="two-col">
+        <div>
+          <h4 style="font-family:'Playfair Display',serif;font-size:1.2rem;margin-bottom:1rem;color:var(--accent)">The Burnout Epidemic</h4>
+          <p>62% of nurses and 44% of physicians report burnout symptoms. Suicide rates among physicians are 2x the general population. The built environment contributes directly: windowless break rooms, inadequate rest spaces, noise levels averaging 72 dB (WHO recommends 35 dB for patient areas), and walking distances of 5-6 miles per nursing shift.</p>
+          <p style="margin-top:1rem">The hospital was designed for clinical efficiency. It was never designed for the wellbeing of the people who work in it — and the consequences are now measurable.</p>
+        </div>
+        <img src="images/nurse.jpg" alt="Nurse" class="col-image" onclick="openLightbox(this.src)">
+      </div>
+    </div>
+    <div id="tab-infection" class="tab-panel reveal">
+      <div class="two-col">
+        <div>
+          <h4 style="font-family:'Playfair Display',serif;font-size:1.2rem;margin-bottom:1rem;color:var(--accent)">Healthcare-Associated Infections</h4>
+          <p>On any given day, 1 in 31 hospital patients in the US has at least one healthcare-associated infection (HAI). Globally, HAIs affect hundreds of millions of patients annually and contribute to significant mortality. The built environment is a vector: surfaces, ventilation systems, room layouts that impede hand hygiene, and multi-bed wards all contribute.</p>
+          <p style="margin-top:1rem">Antimicrobial-resistant organisms add urgency. The hospital of the future must be designed as an infection control instrument — from materials science to airflow engineering.</p>
+        </div>
+        <img src="images/lab.jpg" alt="Lab" class="col-image" onclick="openLightbox(this.src)">
+      </div>
+    </div>
+    <div id="tab-equity" class="tab-panel reveal">
+      <div class="two-col">
+        <div>
+          <h4 style="font-family:'Playfair Display',serif;font-size:1.2rem;margin-bottom:1rem;color:var(--accent)">The Equity Gap</h4>
+          <p>Hospital closures disproportionately affect rural and low-income communities. Since 2010, over 130 rural hospitals in the US have closed. Black patients are 20% more likely to experience adverse events in hospital. Indigenous communities in many countries have life expectancies 10-20 years shorter than the national average.</p>
+          <p style="margin-top:1rem">The geography of healthcare infrastructure mirrors — and reinforces — the geography of inequality. Design cannot solve systemic racism, but it can refuse to embed it in concrete.</p>
+        </div>
+        <img src="images/community-1.jpg" alt="Community health" class="col-image" onclick="openLightbox(this.src)">
+      </div>
+    </div>
+    <div id="tab-cost" class="tab-panel reveal">
+      <div class="two-col">
+        <div>
+          <h4 style="font-family:'Playfair Display',serif;font-size:1.2rem;margin-bottom:1rem;color:var(--accent)">The Cost Crisis</h4>
+          <p>US healthcare spending reached $4.5 trillion in 2022 — 17.3% of GDP. A single inpatient day averages $2,883. Hospital construction costs have escalated to $400-$1,000+ per square foot. The economics are unsustainable: hospitals operate on margins averaging 2-3%, while being asked to invest in ever-more-expensive technology and aging infrastructure.</p>
+          <p style="margin-top:1rem">The question is not whether hospitals need to change. It is whether the current economic model allows them to.</p>
+        </div>
+        <img src="images/modern-hospital-2.jpg" alt="Modern hospital" class="col-image" onclick="openLightbox(this.src)">
+      </div>
+    </div>
+
+    <div class="content-block reveal" id="design-gap">
+      <h3>The Design Gap</h3>
+      <div class="subtitle">Why hospitals feel the way they do</div>
+    </div>
+
+    <div class="comparison reveal">
+      <div class="comparison-side old">
+        <h4 style="color:var(--present)">Designed For</h4>
+        <ul>
+          <li>Clinical workflow efficiency</li>
+          <li>Equipment access and sterility</li>
+          <li>Departmental separation</li>
+          <li>Maximum bed capacity</li>
+          <li>Regulatory compliance</li>
+        </ul>
+      </div>
+      <div class="comparison-side new">
+        <h4 style="color:var(--future)">Not Designed For</h4>
+        <ul>
+          <li>Patient healing and recovery</li>
+          <li>Staff wellbeing and retention</li>
+          <li>Family presence and support</li>
+          <li>Wayfinding and orientation</li>
+          <li>Natural light, nature, and quiet</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="pullquote reveal">
+      <p>The evidence is now unambiguous: the physical environment of a hospital measurably affects clinical outcomes, patient recovery times, medication errors, staff turnover, and infection rates. Design is not decoration. It is a clinical intervention.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FUTURE ═══ -->
+<div class="era-divider"></div>
+<section class="era-header" id="future">
+  <div class="reveal">
+    <span class="era-label future">Part III</span>
+    <h2>Possible Futures</h2>
+    <p>Seven trajectories that could transform healing environments over the next decade — from AI diagnostics to hospitals that function as ecosystems.</p>
+  </div>
+</section>
+
+<section id="future-content">
+  <div class="section-inner">
+    <div class="content-block reveal" id="futures-explore">
+      <h3>Seven Possible Futures</h3>
+      <div class="subtitle">Click each to explore</div>
+    </div>
+
+    <div class="futures-grid reveal">
+      <div class="future-card" onclick="toggleFutureCard(this)">
+        <div class="icon">&#9670;</div>
+        <h4>01 — The AI-Augmented Hospital</h4>
+        <p>Machine learning that detects deterioration before humans can, reads scans faster than radiologists, and predicts complications before they occur.</p>
+        <div class="expand-content">
+          <p style="margin-top:1rem">AI is already outperforming human clinicians in specific diagnostic tasks: detecting diabetic retinopathy from retinal scans, identifying breast cancer in mammograms, predicting sepsis hours before clinical signs appear. The AI-augmented hospital integrates these capabilities into the built environment — ambient monitoring that tracks patient vitals without wires, predictive algorithms that alert nurses to deterioration before alarms sound, and diagnostic AI that serves as a second opinion in real time.</p>
+          <p style="margin-top:0.75rem;font-size:0.78rem;color:var(--accent)"><strong>Already happening:</strong> Johns Hopkins' TREWS system predicts sepsis. Google DeepMind's AlphaFold has transformed protein structure prediction. AI scheduling systems reduce surgical delays by 20-30%.</p>
+        </div>
+        <div class="expand-hint">Click to explore</div>
+      </div>
+
+      <div class="future-card" onclick="toggleFutureCard(this)">
+        <div class="icon">&#9752;</div>
+        <h4>02 — The Biophilic Hospital</h4>
+        <p>Healing environments where nature is not amenity but clinical infrastructure — daylight, gardens, water, and natural materials as medicine.</p>
+        <div class="expand-content">
+          <p style="margin-top:1rem">Roger Ulrich's landmark 1984 study demonstrated that surgical patients with views of trees recovered faster, required less pain medication, and had fewer complications than those facing a brick wall. Subsequent research has confirmed: natural light reduces depression and length of stay; healing gardens lower blood pressure and cortisol; natural materials reduce stress responses. The biophilic hospital treats these not as amenities but as clinical requirements — specified with the same rigour as ventilation rates or nurse-call systems.</p>
+          <p style="margin-top:0.75rem;font-size:0.78rem;color:var(--accent)"><strong>Examples:</strong> Khoo Teck Puat Hospital, Singapore — designed as a garden hospital. Maggie's Centres — cancer care buildings designed by world-class architects around nature and domesticity. Dell Children's Medical Center — first LEED Platinum hospital.</p>
+        </div>
+        <div class="expand-hint">Click to explore</div>
+      </div>
+
+      <div class="future-card" onclick="toggleFutureCard(this)">
+        <div class="icon">&#9635;</div>
+        <h4>03 — The Distributed Hospital</h4>
+        <p>Care moves to the patient — hospital-at-home, micro-hospitals, and virtual wards dissolving the boundary of the building.</p>
+        <div class="expand-content">
+          <p style="margin-top:1rem">Hospital-at-home programmes have demonstrated equivalent or better outcomes for selected conditions at 30-40% lower cost. Remote monitoring, telehealth, and mobile diagnostics mean that the four walls of the hospital are no longer the only place where acute care can safely happen. Micro-hospitals (8-50 beds) bring emergency and short-stay care to underserved communities. The distributed hospital isn't one building — it's a network of care settings connected by data, logistics, and clinical protocols.</p>
+          <p style="margin-top:0.75rem;font-size:0.78rem;color:var(--accent)"><strong>Leaders:</strong> Mayo Clinic's Advanced Care at Home. Mount Sinai's hospital-at-home programme. Mercy Health's Virtual Care Centre — a hospital with no beds, monitoring 3,000+ patients remotely.</p>
+        </div>
+        <div class="expand-hint">Click to explore</div>
+      </div>
+
+      <div class="future-card" onclick="toggleFutureCard(this)">
+        <div class="icon">&#9733;</div>
+        <h4>04 — The Trauma-Informed Hospital</h4>
+        <p>Architecture that acknowledges the psychological experience of illness — designing for dignity, autonomy, and emotional safety.</p>
+        <div class="expand-content">
+          <p style="margin-top:1rem">Hospitalisation is inherently traumatic: loss of autonomy, exposure, noise, sleep deprivation, separation from loved ones. Trauma-informed design responds to this reality. Single-patient rooms with family accommodation. Patient control over lighting, temperature, and privacy. Acoustic design that enables rest. Wayfinding that reduces anxiety. Spaces for spiritual practice, grief, and reflection. The emergency department redesigned to separate acute psychiatric crisis from the chaos of the waiting room.</p>
+          <p style="margin-top:0.75rem;font-size:0.78rem;color:var(--accent)"><strong>Pioneers:</strong> Maggie's Centres (designed by Gehry, Hadid, Heatherwick). Bridgepoint Health, Toronto — chronic care redesigned around patient autonomy. Emergency departments with behavioral health pods.</p>
+        </div>
+        <div class="expand-hint">Click to explore</div>
+      </div>
+
+      <div class="future-card" onclick="toggleFutureCard(this)">
+        <div class="icon">&#8635;</div>
+        <h4>05 — The Adaptive Hospital</h4>
+        <p>Buildings designed from the outset to change — surge capacity built in, rooms that reconfigure, infrastructure that flexes with demand.</p>
+        <div class="expand-content">
+          <p style="margin-top:1rem">COVID-19 exposed a fatal rigidity in hospital design. Facilities could not be repurposed fast enough. ICU beds could not be added without construction. Airflow could not be redirected. The adaptive hospital is designed for uncertainty: universal rooms that can function as medical-surgical, ICU, or isolation with infrastructure changes rather than construction; modular ward blocks that can be added in weeks; HVAC systems that can switch between positive and negative pressure; and digital twin technology that models capacity scenarios in real time.</p>
+          <p style="margin-top:0.75rem;font-size:0.78rem;color:var(--accent)"><strong>Examples:</strong> Danish "super hospitals" designed with acuity-adaptable rooms. Singapore's Tuas Mega Port approach to modular healthcare. Wuhan's emergency hospitals built in 10 days — crude but instructive.</p>
+        </div>
+        <div class="expand-hint">Click to explore</div>
+      </div>
+
+      <div class="future-card" onclick="toggleFutureCard(this)">
+        <div class="icon">&#9673;</div>
+        <h4>06 — The Net-Zero Hospital</h4>
+        <p>Healthcare that heals people without harming the planet — decarbonising one of the most energy-intensive building types.</p>
+        <div class="expand-content">
+          <p style="margin-top:1rem">Hospitals operate 24/7/365, consume 2.5x more energy per square foot than commercial offices, and the global healthcare sector's carbon footprint is equivalent to the world's fifth-largest country. The NHS — the first health system to commit to net-zero (by 2040 for direct emissions) — has demonstrated that decarbonisation is possible: LED retrofits, heat pumps, on-site solar, anaesthetic gas capture, sustainable procurement. The challenge is that hospitals cannot compromise on air changes, sterilisation, or temperature control — so the engineering must be genuinely innovative, not just incremental.</p>
+          <p style="margin-top:0.75rem;font-size:0.78rem;color:var(--accent)"><strong>Leaders:</strong> NHS net-zero commitment (2020). Kaiser Permanente — carbon neutral since 2020. Dell Children's Medical Center — first LEED Platinum hospital. Passive House hospital designs in Austria and Germany.</p>
+        </div>
+        <div class="expand-hint">Click to explore</div>
+      </div>
+
+      <div class="future-card" onclick="toggleFutureCard(this)">
+        <div class="icon">&#10029;</div>
+        <h4>07 — The Community Health Hub</h4>
+        <p>The hospital as civic anchor — preventive care, social services, education, and community wellbeing under one roof.</p>
+        <div class="expand-content">
+          <p style="margin-top:1rem">The most effective healthcare systems invest upstream: in prevention, nutrition, mental health, housing, and social connection. The community health hub embeds the hospital in the community rather than isolating it behind a car park. Ground-floor spaces for community gathering. Farmers' markets and cooking classes alongside clinical services. Mental health support accessible without a referral. Childcare, job training, and social services co-located with primary care. The hospital becomes the community's most visible investment in collective wellbeing.</p>
+          <p style="margin-top:0.75rem;font-size:0.78rem;color:var(--accent)"><strong>Examples:</strong> Buurtzorg model (Netherlands) — neighbourhood-based nursing. Southcentral Foundation (Alaska) — Indigenous-designed primary care. Bromley-by-Bow Centre (London) — GP surgery integrated with community services, gardens, and art programmes.</p>
+        </div>
+        <div class="expand-hint">Click to explore</div>
+      </div>
+    </div>
+
+    <div class="content-block reveal">
+      <h3>Visions of Tomorrow</h3>
+      <div class="subtitle">Architecture that reimagines healing</div>
+    </div>
+
+    <div class="gallery reveal">
+      <img src="images/futuristic-1.jpg" alt="Futuristic design" onclick="openLightbox(this.src)">
+      <img src="images/biophilic-1.jpg" alt="Nature and healing" onclick="openLightbox(this.src)">
+      <img src="images/arch-2.jpg" alt="Modern architecture" onclick="openLightbox(this.src)">
+      <img src="images/biophilic-2.jpg" alt="Healing garden" onclick="openLightbox(this.src)">
+      <img src="images/wellness-1.jpg" alt="Wellness" onclick="openLightbox(this.src)">
+      <img src="images/digital-health.jpg" alt="Digital health" onclick="openLightbox(this.src)">
+    </div>
+
+    <div class="content-block reveal" id="new-brief">
+      <h3>A New Brief for Hospital Design</h3>
+      <div class="subtitle">What the hospital of 2035 must deliver</div>
+    </div>
+
+    <div class="cards-grid reveal">
+      <div class="card" style="border-top:2px solid var(--future)"><div class="card-body">
+        <h4>Healing, not just treatment</h4>
+        <p>Every design decision — lighting, acoustics, materials, views — must be evaluated for its impact on patient recovery. The evidence base is strong enough to make this a brief standard, not an aspiration.</p>
+      </div></div>
+      <div class="card" style="border-top:2px solid var(--future)"><div class="card-body">
+        <h4>Staff wellbeing as infrastructure</h4>
+        <p>Daylit break rooms, quiet rest spaces, reduced walking distances, acoustic refuges. You cannot deliver compassionate care from a depleted workforce in a hostile environment.</p>
+      </div></div>
+      <div class="card" style="border-top:2px solid var(--future)"><div class="card-body">
+        <h4>Pandemic-ready by default</h4>
+        <p>Surge capacity, isolation capability, adaptable airflow, and modular expansion must be embedded in every new hospital from day one — not improvised in crisis.</p>
+      </div></div>
+      <div class="card" style="border-top:2px solid var(--future)"><div class="card-body">
+        <h4>Radically accessible</h4>
+        <p>Physical accessibility, cultural safety, language access, and neurodiversity must be designed in — not accommodated as afterthoughts. The hospital must work for everyone, not just the average patient.</p>
+      </div></div>
+      <div class="card" style="border-top:2px solid var(--future)"><div class="card-body">
+        <h4>Digitally native</h4>
+        <p>The building must be designed as a data platform: sensor networks, digital twins, real-time location systems, and infrastructure that supports technologies not yet invented.</p>
+      </div></div>
+      <div class="card" style="border-top:2px solid var(--future)"><div class="card-body">
+        <h4>Net-positive impact</h4>
+        <p>A hospital that consumes resources to heal people while generating emissions that harm public health is a contradiction. Net-zero is the floor, not the ceiling.</p>
+      </div></div>
+    </div>
+
+    <div class="pullquote reveal" style="margin-top:3rem">
+      <p>The hospital that will define the next generation of care will not be the one with the most advanced scanner or the largest emergency department. It will be the one that understood that the building itself is a therapeutic instrument — and designed every surface, every sightline, every threshold accordingly.</p>
+    </div>
+
+    <div class="content-block reveal">
+      <h3>The Self-Learning Hospital</h3>
+      <div class="subtitle">Sense, learn, adapt — the building as clinical partner</div>
+    </div>
+
+    <div class="cards-grid reveal" style="grid-template-columns: repeat(3, 1fr);">
+      <div class="card" style="border-left:3px solid var(--future)"><div class="card-body">
+        <h4>Sense</h4>
+        <p>Real-time monitoring of patient flow, bed occupancy, air quality, noise levels, hand-hygiene compliance, equipment location, and staff fatigue indicators — a continuous operational picture of the hospital as a living system.</p>
+      </div></div>
+      <div class="card" style="border-left:3px solid var(--accent)"><div class="card-body">
+        <h4>Learn</h4>
+        <p>A digital twin processes this data to identify patterns: which corridors create bottlenecks during shift changes, which rooms have the highest fall rates, when infection clusters correlate with ventilation anomalies. The building develops clinical intelligence about itself.</p>
+      </div></div>
+      <div class="card" style="border-left:3px solid var(--past)"><div class="card-body">
+        <h4>Adapt</h4>
+        <p>The building responds: redirecting airflow to contain an outbreak, adjusting lighting to support circadian rhythms, rerouting patient transport to reduce congestion, and informing renovation decisions with years of evidence about what works and what fails.</p>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="brand">The Future of Hospitals</div>
+  <p>An interactive exploration of healing environments — past, present, and possible futures<br>
+  Images courtesy of <a href="https://unsplash.com" style="color:var(--accent);text-decoration:none">Unsplash</a> contributors under the Unsplash License</p>
+</footer>
+
+<script>
+const revealEls = document.querySelectorAll('.reveal');
+const revealObserver = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+revealEls.forEach(el => revealObserver.observe(el));
+
+window.addEventListener('scroll', () => {
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  document.getElementById('progressBar').style.width = (window.scrollY / h * 100) + '%';
+});
+
+let lastScrollY = 0;
+window.addEventListener('scroll', () => {
+  document.getElementById('nav').classList.toggle('hidden', window.scrollY > lastScrollY && window.scrollY > 200);
+  lastScrollY = window.scrollY;
+});
+
+const timelineNav = document.getElementById('timelineNav');
+window.addEventListener('scroll', () => { timelineNav.classList.toggle('visible', window.scrollY > window.innerHeight * 0.5); });
+
+document.querySelectorAll('.timeline-dot').forEach(dot => {
+  dot.addEventListener('click', () => {
+    const s = document.getElementById(dot.dataset.section);
+    if (s) s.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+const sectionIds = [...document.querySelectorAll('.timeline-dot')].map(d => d.dataset.section);
+const sectionObserver = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { document.querySelectorAll('.timeline-dot').forEach(d => d.classList.remove('active')); const dot = document.querySelector(`.timeline-dot[data-section="${e.target.id}"]`); if (dot) dot.classList.add('active'); } });
+}, { threshold: 0.3 });
+sectionIds.forEach(id => { const el = document.getElementById(id); if (el) sectionObserver.observe(el); });
+
+const navObserver = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active')); const link = document.querySelector(`.nav-links a[href="#${e.target.id}"]`); if (link) link.classList.add('active'); } });
+}, { threshold: 0.2 });
+['past', 'present', 'future'].forEach(id => { const el = document.getElementById(id); if (el) navObserver.observe(el); });
+
+const statObserver = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { const el = e.target; const target = parseInt(el.dataset.target); const prefix = el.dataset.prefix || ''; const suffix = el.dataset.suffix || '%'; let current = 0; const step = Math.max(1, Math.ceil(target / 40)); const interval = setInterval(() => { current += step; if (current >= target) { current = target; clearInterval(interval); } el.textContent = prefix + current + suffix; }, 30); statObserver.unobserve(el); } });
+}, { threshold: 0.5 });
+document.querySelectorAll('.stat-number').forEach(el => statObserver.observe(el));
+
+function switchTab(e, tabId) { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active')); e.target.classList.add('active'); document.getElementById(tabId).classList.add('active'); }
+function toggleFutureCard(card) { card.classList.toggle('expanded'); card.querySelector('.expand-hint').textContent = card.classList.contains('expanded') ? 'Click to collapse' : 'Click to explore'; }
+function openLightbox(src) { document.getElementById('lightboxImg').src = src; document.getElementById('lightbox').classList.add('open'); }
+function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+document.querySelectorAll('a[href^="#"]').forEach(a => { a.addEventListener('click', e => { e.preventDefault(); const t = document.querySelector(a.getAttribute('href')); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); }); });
+</script>
+</body>
+</html>
